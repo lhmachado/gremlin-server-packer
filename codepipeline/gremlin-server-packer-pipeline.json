@@ -1,0 +1,18 @@
+[   
+    {
+        "ParameterKey": "RepoBranchName",
+        "ParameterValue": "<your-default-brach-name>"
+    },
+    {
+        "ParameterKey": "RepoName",
+        "ParameterValue": "<github-repo-name>"
+    },
+    {
+        "ParameterKey": "RepoUser",
+        "ParameterValue": "<github-repo-user>"
+    },
+    {
+        "ParameterKey": "RepoToken",
+        "ParameterValue": "<github-personal-access-token>"
+    }
+]

@@ -1,0 +1,6 @@
+-   name: 'Provision by ansible role'
+    hosts: localhost
+    connection: local
+    become: true
+    roles:
+    - gremlin-server

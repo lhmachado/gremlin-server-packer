@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  RepoUser:
+    Type: String
+  RepoToken:
+    Type: String
+  RepoName:
+    Type: String
+  RepoBranchName:
+    Type: String
+Resources:
+  ArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: BucketOwnerFullControl
+  CodeBuildPipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: 
+              - codebuild.amazonaws.com
+              - codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+  CodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name:
+        Fn::Sub: deploy-${AWS::StackName}
+      Description: Validate JSON Config files & Lint *.py files
+      Artifacts:
+        Type: CODEPIPELINE
+      ServiceRole: !GetAtt [CodeBuildPipelineRole, Arn]
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: "buildspec.yml"
+      TimeoutInMinutes: 30
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: build-${AWS::StackName}
+  CodePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      Name:
+        Fn::Sub: ${AWS::StackName}
+      RoleArn: !GetAtt [CodeBuildPipelineRole, Arn]
+      ArtifactStore:
+        Location:
+          Ref:
+            ArtifactStoreBucket
+        Type: S3
+      Stages:
+        - Name: GET_SOURCE
+          Actions:
+            - Name: GetGitRepo
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
+              OutputArtifacts:
+                - Name: GitSource
+              Configuration:
+                Owner: !Sub ${RepoUser}
+                Branch: !Sub ${RepoBranchName}
+                OAuthToken: !Sub ${RepoToken}
+                Repo: !Sub ${RepoName}
+              RunOrder: 1
+        - Name: BUILD_PACKER
+          Actions:
+            - Name: !Sub CodeBuild
+              InputArtifacts:
+                - Name: GitSource
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName:
+                  Ref: CodeBuild
+              RunOrder: 1

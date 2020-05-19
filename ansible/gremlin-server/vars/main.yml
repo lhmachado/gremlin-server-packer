@@ -1,0 +1,5 @@
+---
+    GREMLIN_SERVER_VERSION: 3.4.1
+    JAVA_VERSION: 1.8.0
+    GREMLIN_SERVER_INSTALL_PATH: /opt/apache-tinkerpop-gremlin-server-{{GREMLIN_SERVER_VERSION}}
+    

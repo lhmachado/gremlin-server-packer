@@ -1,0 +1,17 @@
+[Unit]
+Wants=network-online.target
+After=network.target network-online.target
+Description=Gremlin Server as a service
+[Service]
+User=root
+#change this directory into your workspace
+#mkdir workspace 
+WorkingDirectory=/opt/gremlin-server
+#path to the executable bash script which executes the jar file
+ExecStart=/bin/bash start.sh /opt/gremlin-server/conf/gremlin-server-runner.yaml
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

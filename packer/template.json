@@ -1,0 +1,61 @@
+{
+    "variables": {
+        "region": "us-east-1"
+    },
+    "builders": [
+      {
+        "type": "amazon-ebs",
+        "region": "{{user `region`}}",
+        "source_ami_filter": {
+          "filters": {
+            "virtualization-type": "hvm",
+            "name": "amzn2-ami-hvm-2.0.*.1-x86_64-ebs",
+            "root-device-type": "ebs"
+          },
+          "owners": [
+            "amazon"
+          ],
+          "most_recent": true
+        },
+        "instance_type": "t2.micro",
+        "vpc_filter": {
+            "filters": {
+              "tag:Class": "packer"
+            }
+        },
+        "subnet_filter": {
+          "filters": {
+            "tag:Network": "Public"
+          },
+          "most_free": true,
+          "random": false
+        },
+        "ssh_username": "ec2-user",
+        "ami_name": "gremlin-server-packer {{timestamp}}",
+        "tags":{
+          "Name": "GremlinServer - {{timestamp}}"
+        }
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "shell",
+        "inline": [
+          "sudo amazon-linux-extras install ansible2"
+        ]
+      },
+      {
+        "type": "ansible-local",
+        "playbook_file": "ansible/playbook.yml",
+        "role_paths": [
+          "ansible/gremlin-server"
+        ]
+      },
+      {
+        "type": "shell",
+        "inline": [
+          "rm .ssh/authorized_keys ; sudo rm /root/.ssh/authorized_keys"
+        ]
+      }
+    ]
+  }

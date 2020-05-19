@@ -1,0 +1,49 @@
+---
+    # Install Java
+    -   name: install the latest java version {{JAVA_VERSION}}
+        package:
+            name:
+            - java-{{JAVA_VERSION}}-openjdk
+            state: latest
+    
+    # Download and extract binaries
+    -   name: Download and Extract Gremlin {{GREMLIN_SERVER_VERSION}}
+        unarchive:
+            src: http://archive.apache.org/dist/tinkerpop/{{GREMLIN_SERVER_VERSION}}/apache-tinkerpop-gremlin-server-{{GREMLIN_SERVER_VERSION}}-bin.zip
+            dest: /opt
+            creates: "{{GREMLIN_SERVER_INSTALL_PATH}}/unzipped"
+            remote_src: yes
+    
+    # Create symbolic link
+    -   name: Create simbolic link wirh Gremlin Server {{GREMLIN_SERVER_VERSION}}
+        file:
+            src: "{{GREMLIN_SERVER_INSTALL_PATH}}"
+            dest: "/opt/gremlin-server"
+            state: link
+    
+    # Create synchronize files in /opt/gremlin-server       
+    -   name: Synchronization of config and extra files
+        synchronize:
+            src: files/server/
+            dest: "{{GREMLIN_SERVER_INSTALL_PATH}}"
+    
+    
+    # Make runnable with +x
+    -   name: Make start.sh runnable
+        file:
+            dest: "{{GREMLIN_SERVER_INSTALL_PATH}}/start.sh"
+            mode: +x
+    
+    # Copy systemd service specification file
+    -   name: Copy systemd service specification file
+        copy:
+            src: files/gremlin-server.service
+            dest: /etc/systemd/system/gremlin-server.service
+    
+    -   name: Enable gremlin service
+        systemd:
+            name: gremlin-server
+            daemon_reload: yes
+            state: started
+            enabled: yes
+    
